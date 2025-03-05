@@ -1,64 +1,48 @@
-import React, { useEffect, useRef } from 'react';
-import { View } from 'react-native';
-import { GLView } from 'expo-gl';
-import { Renderer } from 'expo-three';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import React, { Suspense, useEffect, useRef } from "react";
+import { View } from "react-native";
+import { GLView } from "expo-gl";
+import { Renderer } from "expo-three";
+import * as THREE from "three";
+import { Canvas, useLoader } from "@react-three/fiber/native";
+import { useGLTF } from "@react-three/drei/native";
+import modelPath from "../../public/classroom.glb";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
+import { GLTFLoader } from "three-stdlib";
+import { OrbitControls } from "@react-three/drei/native";
+
+function Model(props) {
+  const asset = Asset.fromModule(require("../../public/classroom.glb"));
+  // Dosyayı indirip localUri elde etmek:
+  if (!asset.localUri) {
+    asset.downloadAsync(); // genelde bir kez çağırmak yeterli
+  }
+  const gltf = useLoader(
+    GLTFLoader,
+    asset.localUri,
+    (loader) => {
+      const dracoLoader = new DRACOLoader();
+      // Burada dracoLoader’ın decoder path’ini belirtmelisiniz.
+      dracoLoader.setDecoderPath(
+        "https://www.gstatic.com/draco/versioned/decoders/1.5.6/"
+      );
+      loader.setDRACOLoader(dracoLoader);
+    }
+  );
+  gltf.scene.scale.set(0.01, 0.01, 0.01);
+  return <primitive {...props} object={gltf.scene} scale={1} />;
+}
 
 export default function GLBViewer() {
-  let animationFrameId = useRef(null);
-
-  useEffect(() => {
-    return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
-    };
-  }, []);
-
-  const onContextCreate = async (gl) => {
-    const { drawingBufferWidth: width, drawingBufferHeight: height } = gl;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(0, 1, 5);
-
-    const renderer = new Renderer({ gl });
-    renderer.setSize(width, height);
-
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 10, 7);
-    scene.add(directionalLight);
-
-    // Setup loaders
-    const loader = new GLTFLoader();
-
-    // Load GLB
-    loader.load(
-      'https://raw.githubusercontent.com/kafeinberkcolakk/ai-for-kidz/master/assets/untitled.glb',
-      (gltf) => {
-        gltf.scene.position.set(0, -1, 0);
-        scene.add(gltf.scene);
-      },
-      undefined,
-      (error) => console.error('GLB Load Error:', error)
-    );
-
-    // Render loop
-    const render = () => {
-      animationFrameId.current = requestAnimationFrame(render);
-      renderer.render(scene, camera);
-      gl.endFrameEXP();
-    };
-    render();
-  };
-
   return (
     <View style={{ flex: 1 }}>
-      <GLView style={{ flex: 1 }} onContextCreate={onContextCreate} />
+      <Canvas style={{ height: "100%", width: "100%" }}>
+      <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 10, 10]} intensity={1} />
+        <OrbitControls />
+        <Suspense fallback={null}>
+          <Model />
+        </Suspense>
+      </Canvas>
     </View>
   );
 }
