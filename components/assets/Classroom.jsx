@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { View } from 'react-native';
-import { GLView } from 'expo-gl';
-import { Renderer } from 'expo-three';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import React, { useEffect, useRef } from "react";
+import { View } from "react-native";
+import { GLView } from "expo-gl";
+import { Renderer } from "expo-three";
+import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
 export default function GLBViewer() {
   let animationFrameId = useRef(null);
@@ -37,14 +37,27 @@ export default function GLBViewer() {
     const loader = new GLTFLoader();
 
     // Load GLB
+    // Texture loader
+    const textureLoader = new THREE.TextureLoader();
+    const normalTexture = textureLoader.load("https://raw.githubusercontent.com/kafeinberkcolakk/ai-for-kidz/master/assets/test/BakedTextures.jpg");
+
+    // GLTFLoader ile .gltf dosyasını yükleme
     loader.load(
-      'https://raw.githubusercontent.com/kafeinberkcolakk/ai-for-kidz/master/assets/untitled.glb',
+      "https://raw.githubusercontent.com/kafeinberkcolakk/ai-for-kidz/master/assets/untitled.gltf",
       (gltf) => {
-        gltf.scene.position.set(0, -1, 0);
+        // Modeldeki tüm mesh’leri dolaş
+        gltf.scene.traverse((child) => {
+          if (child.isMesh) {
+            // Manuel texture atama
+            child.material.map = diffuseTexture;
+            child.material.normalMap = normalTexture;
+            child.material.needsUpdate = true;
+          }
+        });
         scene.add(gltf.scene);
       },
       undefined,
-      (error) => console.error('GLB Load Error:', error)
+      (error) => console.error("GLTF Load Error:", error)
     );
 
     // Render loop
