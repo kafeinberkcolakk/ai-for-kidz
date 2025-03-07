@@ -7,7 +7,7 @@ export default function App() {
     <View style={styles.container}>
       <StatusBar style="auto" />
       <Text>BERK</Text>
-      <GLBViewer2 />
+      <ClassroomViewer />
     </View>
   );
 }
