@@ -6,7 +6,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
-      <Text>BERK</Text>
+      <Text>adsmkpasdmkasdmkdsamkdsak</Text>
       <ClassroomViewer />
     </View>
   );
